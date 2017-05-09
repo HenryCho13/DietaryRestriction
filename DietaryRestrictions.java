@@ -1,6 +1,7 @@
-package DietaryRestriction;
+package DietaryRestrictions;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -28,18 +29,23 @@ public class DietaryRestrictions {
 		public void map(Object key, Text value, Context context) 
 				throws IOException, InterruptedException {
 			
+			//2017/1/24 7:00
+			
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy/M/d H:mm");
+
 			String type;
 			String typeValue;
-			String date;
-			String time;
+			String dateTime;
 
 			String[] row = value.toString().split(" ");
 			
 			type = row[0];
 			typeValue = row[1];
-			date = row[3];
-			time = row[4];
+			dateTime = row[3] + " " + row[4];
 
+			Date date = formatter.parse(dateTime);
+			
+			
 			datetime.set(date + " " + time);
 			keyvalue.set(type + ": " + typeValue);
 			context.write(datetime, keyvalue);
@@ -80,7 +86,7 @@ public class DietaryRestrictions {
 	    job.setReducerClass(FeelFoodReducer.class);
 	    job.setOutputKeyClass(Text.class);
 	    job.setOutputValueClass(Text.class);
-	    FileInputFormat.addInputPath(job, new Path("input.txt"));
+	    FileInputFormat.addInputPath(job, new Path("input"));
 	    FileOutputFormat.setOutputPath(job, new Path("output"));
 	    
 	    System.exit(job.waitForCompletion(true) ? 0 : 1);
