@@ -1,6 +1,7 @@
-package DietaryRestrictions;
+package DietaryRestriction;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,19 +21,17 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class DietaryRestrictions {
 	
-	public static class FeelFoodMapper 
-		extends Mapper<Object, Text, Text, Text> { 	
+	public class Map1 
+		extends Mapper<Object, Text, Text, IntWritable> { 	
 
-	    private Text datetime = new Text();
-	    private Text keyvalue = new Text();
+	    private Text feelFood = new Text();
+	    private final IntWritable one = new IntWritable(1);
+	    ArrayList<Food>foodList = new ArrayList<Food>();
 
 		public void map(Object key, Text value, Context context) 
 				throws IOException, InterruptedException {
 			
-			//2017/1/24 7:00
-			
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy/M/d H:mm");
-
 			String type;
 			String typeValue;
 			String dateTime;
@@ -42,38 +41,77 @@ public class DietaryRestrictions {
 			type = row[0];
 			typeValue = row[1];
 			dateTime = row[3] + " " + row[4];
-
-			Date date = formatter.parse(dateTime);
+			Date date = null;
 			
+			try {
+				date = formatter.parse(dateTime);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 			
-			datetime.set(date + " " + time);
-			keyvalue.set(type + ": " + typeValue);
-			context.write(datetime, keyvalue);
-
+			if (type.equals("food")) {
+				Food food = new Food(typeValue, date);	//convert date and time to ms 	
+				foodList.add(food);
+			}
+          
+	    	else if (type.equals("feeling")) {
+		        for (int i=0; i < foodList.size(); i++) {
+		          if (date.getTime() - foodList.get(i).getDate().getTime() <= 12) {
+		        	  feelFood.set("type" + " " + foodList.get(i).getValue());
+		        	  context.write(feelFood, one);
+		          }
+		          else {
+		        	  foodList.remove(i);
+		          }
+		        }
+	    	}
 		}
 	}
 	
-	public static class FeelFoodReducer
-      extends Reducer<Text,Text,Text,Text> {
-		public void reduce(Text key, Iterator<Text> values, Context context) 
-				throws IOException, InterruptedException {
+	public static class Reduce1
+	extends Reducer<Text,IntWritable,Text, IntWritable> {
 		
-			
-//			for (int i=values.getLength()-1; i<=0; i--) {
-//				context.write(key, values.);
-//			}
-			
-		}
+		private IntWritable result = new IntWritable();
+
+	    public void reduce(Text key, Iterable<IntWritable> values,
+	                       Context context
+	                       ) throws IOException, InterruptedException {
+	      int sum = 0;
+	      for (IntWritable val : values) {
+	        sum += val.get();
+	      }
+	      result.set(sum);
+	      context.write(key, result);
+	    }
+
 	}
 	
-//	public static class FeelFoodReducer extends Reducer<Text, Text, Text, Text>
-//	{
-//		public void reduce(Text key, Text values, Context context)
-//				throws IOException, InterruptedException
-//		{
-//			
-//		}
-//	}
+	
+	public class Food {
+		String value;
+		Date date;
+		
+		Food(String v, Date d) {
+			date = d;
+			value = v;
+		}
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public Date getDate() {
+			return date;
+		}
+
+		public void setDate(Date date) {
+			this.date = date;
+		}
+	}
 	
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
@@ -81,9 +119,9 @@ public class DietaryRestrictions {
 		    
 	    Job job = Job.getInstance(conf, "DietaryRestrictions");
 	    job.setJarByClass(DietaryRestrictions.class);
-	    job.setMapperClass(FeelFoodMapper.class);
-	    job.setCombinerClass(FeelFoodReducer.class);
-	    job.setReducerClass(FeelFoodReducer.class);
+	    job.setMapperClass(Map1.class);
+	    job.setCombinerClass(Reduce1.class);
+	    job.setReducerClass(Reduce1.class);
 	    job.setOutputKeyClass(Text.class);
 	    job.setOutputValueClass(Text.class);
 	    FileInputFormat.addInputPath(job, new Path("input"));
