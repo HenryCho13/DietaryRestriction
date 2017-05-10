@@ -8,20 +8,25 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.Reducer.Context;
 
 public class Reduce2 
-	extends Reducer<Text, NullWritable, FeelCountPair, NullWritable> {
+	extends Reducer<FeelCountPair, NullWritable, FeelCountPair, NullWritable> {
 //	extends Reducer<Text, NullWritable, FeelCountPair, Text> {
 	
-	private Text feelFood;
-	private Text incidents;
+	private String feel = "";
+	private int n;
 	
 	public void reduce(FeelCountPair key, Iterable<NullWritable> values,
 						Context context
 						) throws IOException, InterruptedException {
-	
-//	public void reduce(FeelCountPair key, Iterable<Text> values,
-//			Context context
-//			) throws IOException, InterruptedException {
-	
 		
+//		for (NullWritable val: values) {
+//			context.write(key, NullWritable.get());
+//		}
+		n = 0;
+		for (NullWritable val: values) {
+				if (n < 5) {
+					context.write(key, NullWritable.get());
+					n++;
+				}
+		}
 	}
 }

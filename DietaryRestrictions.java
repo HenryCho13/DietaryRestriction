@@ -33,7 +33,7 @@ public class DietaryRestrictions {
 	    job1.setOutputKeyClass(Text.class);
 	    job1.setOutputValueClass(IntWritable.class);
 	    FileInputFormat.addInputPath(job1, new Path("input"));
-	    FileOutputFormat.setOutputPath(job1, new Path("output-1"));
+	    FileOutputFormat.setOutputPath(job1, new Path("intermedOutput"));
 	    
 	    boolean success = job1.waitForCompletion(true);
 	    
@@ -43,13 +43,16 @@ public class DietaryRestrictions {
 		    job2.setMapperClass(Map2.class);
 		    job2.setCombinerClass(Reduce2.class);
 		    job2.setReducerClass(Reduce2.class);
+		    job2.setNumReduceTasks(1);
+		    job2.setMapOutputKeyClass(FeelCountPair.class);
+		    job2.setMapOutputValueClass(NullWritable.class);
 		    job2.setOutputKeyClass(FeelCountPair.class);
 		    job2.setOutputValueClass(NullWritable.class);
-//		    job2.setOutputValueClass(Text.class);
 		    job2.setPartitionerClass(FeelCountPartitioner.class);
+		    job2.setSortComparatorClass(FeelCountKeySortComparator.class);
 		    job2.setGroupingComparatorClass(FeelCountGroupingComparator.class);
-		    FileInputFormat.addInputPath(job2, new Path("output-1"));
-		    FileOutputFormat.setOutputPath(job2, new Path("output-2"));
+		    FileInputFormat.addInputPath(job2, new Path("intermedOutput"));
+		    FileOutputFormat.setOutputPath(job2, new Path("finalOutput"));
 		    success = job2.waitForCompletion(true);
 	    }
 	   

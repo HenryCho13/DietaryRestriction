@@ -10,7 +10,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Mapper.Context;
 
 public class Map2 
-//	extends Mapper<Object, Text, FeelCountPair, NullWritable> {
 	extends Mapper<Object, Text, FeelCountPair, NullWritable> {
 	
 	private FeelCountPair compositeKey;

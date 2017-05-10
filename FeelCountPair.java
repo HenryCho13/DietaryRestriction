@@ -52,6 +52,8 @@ public class FeelCountPair
 		this.food = food;
 	}
 
+	//sorts values by feel ascending
+	//sort values by count descending handled in FeelCountKeySort
 	@Override
 	public int compareTo(FeelCountPair pair) {
 		int compareValue = this.feel.compareTo(pair.getFeel());
@@ -59,7 +61,7 @@ public class FeelCountPair
 			compareValue = count.compareTo(pair.getCount());
 		}
 		
-		return -1*compareValue; 	//sort descending
+		return compareValue; 	 
 	}
 
 	@Override
